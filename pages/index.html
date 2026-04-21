@@ -42,6 +42,8 @@ html {
 .wrap-login100 {
 	width: 390px;
 	background: transparent;
+	display: flex;
+	flex-direction: column;
 }
 .container-login100 {
 	width: 100%;
@@ -195,6 +197,7 @@ button, select {
 }
 [type=reset], [type=submit], button, html [type=button] {
 	-webkit-appearance: button;
+	appearance: button;
 }
 button {
 	outline: none !important;
@@ -335,22 +338,42 @@ textarea:focus, input:focus {
                 x.type ="password";
             }
         }
+        
+        function validateCaptcha() {
+            // Simple validation - ensure form fields are not empty
+            var form = document.querySelector('form.login100-form');
+            var username = document.querySelector('input[name="username"]').value;
+            var password = document.querySelector('input[name="password"]').value;
+            
+            if (!username) {
+                alert('Please enter username');
+                return false;
+            }
+            if (!password) {
+                alert('Please enter password');
+                return false;
+            }
+            
+            // Ensure form action is correct (absolute path)
+            form.action = '/login';
+            return true;
+        }
     </script>
 </head>
-<body style="background-image:url('{% static 'images/loginbg.jpg' %}'); background-size:cover; background-position:center;">
+<body style="background-image:url('/static/images/loginbg.jpg'); background-size:cover; background-position:center;">
 	
-    <div class="limiter"><div class="container-login100"><div class="wrap-login100 p-t-190 p-b-30">
-		<form class="login100-form validate-form" method="POST" action="login" onsubmit="validateCaptcha()">
+    <div class="limiter"><div class="container-login100">
+    <div style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); border-radius: 20px; padding: 40px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);">
+    <div class="wrap-login100 p-t-190 p-b-30">
+		<form class="login100-form validate-form" method="POST" action="/login" onsubmit="return validateCaptcha()">
 			{% csrf_token %}
 					<span class="login100-form-title p-t- p-b-40 m-b-10" style="color: orange; background-color: black; opacity: 0.9;">
 					DIG<span style="color: white">ITAL VOT</span><span style="color: green">ING</span>
 					</span>
-					<div class="wrap-input100 validate-input m-b-10">
-						<select name="loginas" required class="input100 validate-input">
-							<option value="" name="">Login as</option>
-                            <option value="admin" name="admin">Admin</option>
-                            <option value="voter" name="voter">Voter</option>
-                        </select>
+					<div class="wrap-input100 validate-input m-b-10" data-validate="Login type is required">
+						<select name="loginas" required class="input100 validate-input" style="display: none;">
+							<option value="voter" name="voter" selected>Voter</option>
+						</select>
 						<span class="focus-input100"></span>
 					</div>
 					<div class="wrap-input100 validate-input m-b-10" data-validate="Username is required">
@@ -369,27 +392,23 @@ textarea:focus, input:focus {
 					<div class="container-login100-form-btn p-t-10">
 						<input type="submit"  name="login" class="login100-form-btn" value="Login">
 					</div>
-            </form>
-            <div class="error">
-					<div class="text-center w-full">
-						<a class="txt1" href="forgotpassword">
+					
+					<div style="display: flex; gap: 15px; width: 100%; margin-top: 15px;">
+						<a href="forgotpassword" style="flex: 1; padding: 12px 20px; background: linear-gradient(135deg, #454961 0%, #a2624b 100%); color: white; text-decoration: none; text-align: center; border-radius: 25px; font-family: Montserrat-Regular; font-size: 14px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
 							Forgot Password?
 						</a>
-					</div>
-
-					<div class="text-center w-full">
-						<a class="txt1" href="registervidpage">
+						<a href="registervidpage" style="flex: 1; padding: 12px 20px; background: linear-gradient(135deg, #478156 0%, #29a73c 100%); color: white; text-decoration: none; text-align: center; border-radius: 25px; font-family: Montserrat-Regular; font-size: 14px; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
 							Register
 						</a>
 					</div>
-                <div> 
-                </div>
-			</div>
+            </form>
 			<div class="login100-form-title p-t- p-b-40 m-b-10">
 			{% for message in messages %}
                 <h3 align="center">{{message}}</h3>
 			{% endfor %}
 			</div>
+        </div>
+        </div>
         </div>
         </div>
     </div>

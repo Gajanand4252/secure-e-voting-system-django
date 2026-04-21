@@ -4,11 +4,94 @@
  {% block content %}
  {% csrf_token %}
     <body>
+    <style>
+      .candidate-card-container {
+        margin-bottom: 20px;
+      }
+      
+      .candidate-card-container input[type="radio"] {
+        display: none;
+      }
+      
+      .candidate-card-label {
+        display: block;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .candidate-profile {
+        background-color: white;
+        color: black;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      
+      .candidate-card-label:hover .candidate-profile {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-color: #999;
+      }
+      
+      .candidate-card-container input[type="radio"]:checked ~ .candidate-card-label .candidate-profile {
+        border: 3px solid #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+      }
+      
+      .candidate-image {
+        flex-shrink: 0;
+      }
+      
+      .candidate-image img {
+        height: 120px;
+        width: 120px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+      
+      .candidate-info {
+        flex-grow: 1;
+      }
+      
+      .candidate-info h4 {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      
+      .candidate-info p {
+        margin: 5px 0;
+        font-size: 14px;
+      }
+      
+      .party-image {
+        flex-shrink: 0;
+        text-align: center;
+      }
+      
+      .party-image img {
+        height: 100px;
+        width: 100px;
+        object-fit: contain;
+      }
+      
+      .party-image p {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #666;
+      }
+    </style>
     <section id="main-content" style="margin-left: 60px; margin-right: 50px;margin-top: 60px;">
       <section class="wrapper" style="margin-top: 60px;">
         <div class="row">
           <div class="col-lg-12">
-            <h3 class="page-header"><i class="fa fa-inbox"></i>Election</h3>
+            <h3 class="page-header"><i class="fa fa-inbox"></i>Election - Select a Candidate</h3>
           </div>
         </div>
           <div class="row">
@@ -16,40 +99,135 @@
             <section class="panel">
                     <form class="form-horizontal" action="vote" method="POST" enctype="multipart/form-data">
                      {% csrf_token %}
+                    {% if candidate %}
                     <div class="row">
                          {% for i in candidate %}
-          <div class="col-lg-12">
-              <div class="profile-widget profile-widget-info">
-              <div class="panel-body"  style="background-color: white; color:black;">
-                <div class="col-lg-2 col-sm-2">
-                  <div class="follow-ava">
-                     <a><img src="{{i.candidate_image.url}}" alt="" class="het-90"></a>
-                  </div>
-                 <h4 class="bg-red">{{i.name}}</h4>
-                </div>
-                  <div class="col-lg-2 col-sm-2">
-                  <div class="follow-ava">
-                     <a><img src="{{i.party_image.url}}" alt="" class="het-90"></a>
-                  </div>
-                 <h4 class="bg-red"><input class="form-control" type="radio" name="can" value="{{i.candidate_id}}"></h4>
-                </div>
-              </div>
-            </div>
-          </div>
-      {% endfor %}
+                    <div class="col-lg-12 candidate-card-container">
+                      <input type="radio" id="candidate_{{i.candidate_id}}" name="can" value="{{i.candidate_id}}" required>
+                      <label for="candidate_{{i.candidate_id}}" class="candidate-card-label">
+                        <div class="candidate-profile">
+                          <div class="candidate-image">
+                            <img src="{{i.candidate_image.url}}" alt="{{i.name}}">
+                          </div>
+                          <div class="candidate-info">
+                            <h4>{{i.name}}</h4>
+                            <p><strong>Party:</strong> {{i.candidate_party}}</p>
+                            <p><strong>State:</strong> {{i.state}}</p>
+                          </div>
+                          <div class="party-image">
+                            <img src="{{i.party_image.url}}" alt="{{i.candidate_party}}">
+                            <p>Click to select</p>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                      {% endfor %}
+                    {% else %}
+                    <div class="col-lg-12" style="padding: 20px; text-align: center; color: red;">
+                      <p>No candidates available for your constituency.</p>
+                    </div>
+                    {% endif %}
                         <div class="col-lg-12">     
               <div class="profile-widget profile-widget-info">
               <div class="panel-body"  style="background-color: white; color:black;">
                 <div class="col-lg-2 col-sm-2" style="float:none;">
-                  Upload Face Video
-                  <div>
-                     <a><input type="file" name="vidfile" accept="video/*" capture="user" required class="input--style-6"></a>
-                  </div>
-                 <button class="btn btn-primary" type="submit" value="vote" style="height: 30px; width: 60px;font-size: 15px;">vote</button>
+                  <h4 style="margin-bottom: 10px;">Verify Your Face to Vote</h4>
+                  <p style="font-size: 12px; margin-bottom: 10px; color: #666;">Position your face clearly in front of the camera</p>
+                  <video id="videoPreview" style="width: 100%; max-width: 400px; margin-bottom: 10px; border: 2px solid #ccc; border-radius: 5px;" autoplay="true"></video>
+                  <br>
+                  <canvas id="canvas" style="display: none;"></canvas>
+                  <input type="hidden" name="faceimage" id="faceImageInput">
+                  <button type="button" id="captureButton" class="btn btn-success" style="margin-bottom: 10px; width: 100%;">Capture & Verify Face</button>
+                  <p id="captureStatus" style="font-size: 12px; color: #666; margin-top: 10px;">Status: Ready to capture</p>
+                  <button class="btn btn-primary" type="button" onclick="submitVote()" style="height: 35px; width: 100%; font-size: 15px; margin-top: 10px;" id="voteButton" disabled>Vote</button>
                 </div>
               </div>
             </div>
           </div>
+          <script>
+            let stream = null;
+            let faceVerified = false;
+            const video = document.getElementById('videoPreview');
+            const canvas = document.getElementById('canvas');
+            const captureButton = document.getElementById('captureButton');
+            const faceImageInput = document.getElementById('faceImageInput');
+            const captureStatus = document.getElementById('captureStatus');
+            const voteButton = document.getElementById('voteButton');
+            
+            async function startCamera() {
+              try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                video.srcObject = stream;
+                captureStatus.textContent = 'Status: Camera ready - Click "Capture & Verify Face" button';
+              } catch (error) {
+                captureStatus.textContent = 'Error: Unable to access camera. Please check permissions.';
+                captureStatus.style.color = 'red';
+              }
+            }
+            
+            captureButton.addEventListener('click', function() {
+              if (!stream) {
+                captureStatus.textContent = 'Error: Camera not initialized';
+                captureStatus.style.color = 'red';
+                return;
+              }
+              
+              const ctx = canvas.getContext('2d');
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              ctx.drawImage(video, 0, 0);
+              
+              canvas.toBlob(function(blob) {
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                  faceImageInput.value = reader.result;
+                  faceVerified = true;
+                  captureStatus.textContent = 'Status: Face captured! Click "Vote" to proceed with voting.';
+                  captureStatus.style.color = 'green';
+                  voteButton.disabled = false;
+                };
+                reader.readAsDataURL(blob);
+              }, 'image/jpeg', 0.95);
+            });
+            
+            document.querySelector('form').addEventListener('submit', function(e) {
+              const candidateSelected = document.querySelector('input[name="can"]:checked');
+              if (!candidateSelected) {
+                e.preventDefault();
+                captureStatus.textContent = 'Error: Please select a candidate before voting.';
+                captureStatus.style.color = 'red';
+                return;
+              }
+              if (!faceVerified) {
+                e.preventDefault();
+                captureStatus.textContent = 'Error: Please capture your face before voting.';
+                captureStatus.style.color = 'red';
+              }
+            });
+            
+            function submitVote() {
+              const candidateSelected = document.querySelector('input[name="can"]:checked');
+              if (!candidateSelected) {
+                captureStatus.textContent = 'Error: Please select a candidate before voting.';
+                captureStatus.style.color = 'red';
+                return;
+              }
+              if (!faceVerified) {
+                captureStatus.textContent = 'Error: Please capture your face before voting.';
+                captureStatus.style.color = 'red';
+                return;
+              }
+              document.querySelector('form').submit();
+            }
+            
+            window.addEventListener('beforeunload', function() {
+              if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+              }
+            });
+            
+            startCamera();
+          </script>
         </div>
                 </form>
             </section>

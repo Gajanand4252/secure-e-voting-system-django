@@ -1,14 +1,26 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import date
 
-# Create your models here.
+
+def validate_voter_age(dateofbirth):
+    """Validate that voter is at least 18 years old"""
+    today = date.today()
+    age = today.year - dateofbirth.year - ((today.month, today.day) < (dateofbirth.month, dateofbirth.day))
+    if age < 18:
+        raise ValidationError('Voter must be at least 18 years old.')
+
+
 class Voters(models.Model):
     voterid_no = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=100)
-    father_name = models.CharField(max_length=100)
+    father_name = models.CharField(max_length=100, blank=True, null=True)
     gender = models.CharField(max_length=6)
-    dateofbirth = models.DateField()
+    dateofbirth = models.DateField(validators=[validate_voter_age])
     address = models.CharField(max_length=1024)
     mobile_no = models.BigIntegerField()
+    email = models.EmailField(max_length=254, blank=True, null=True)
     state = models.CharField(max_length=50)
     pincode = models.CharField(max_length=6)
     parliamentary = models.CharField(max_length=50)
@@ -19,14 +31,13 @@ class Voters(models.Model):
 class Candidates(models.Model):
     candidate_id = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=100)
-    father_name = models.CharField(max_length=100)
+    father_name = models.CharField(max_length=100, blank=True, null=True)
     gender = models.CharField(max_length=6)
     dateofbirth = models.DateField()
     address = models.CharField(max_length=1024)
     mobile_no = models.BigIntegerField()
     state = models.CharField(max_length=50)
     pincode = models.CharField(max_length=6)
-    constituency = models.CharField(max_length=50)
     parliamentary = models.CharField(max_length=50, blank=True, null=True)
     assembly = models.CharField(max_length=50, blank=True, null=True)
     candidate_image = models.ImageField(upload_to='CandidateImage/')
@@ -52,7 +63,6 @@ class Votes(models.Model):
     candidate_name = models.CharField(max_length=100)
     candidate_party = models.CharField(max_length=50)
     state = models.CharField(max_length=50)
-    constituency = models.CharField(max_length=50)
     online_votes = models.BigIntegerField(default=0)
     evm_votes = models.BigIntegerField(default=0)
     total_votes = models.BigIntegerField(default=0)
@@ -68,9 +78,8 @@ class EC_Admins(models.Model):
     address = models.CharField(max_length=1024)
     pincode = models.CharField(max_length=6)
     mobile_no = models.BigIntegerField(unique=True)
-    email = models.EmailField(max_length=254, unique=True)
+    email = models.EmailField(unique=True)
     ecadmin_image = models.ImageField(upload_to='ECAdminImage/')
-
 
     def __str__(self):
         return self.ecadmin_id

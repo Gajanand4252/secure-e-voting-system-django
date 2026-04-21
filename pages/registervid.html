@@ -8,9 +8,10 @@
 
     <!-- Font Icon -->
     <link rel="stylesheet" href="{% static 'register/fonts/material-icon/css/material-design-iconic-font.min.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;700&display=swap" rel="stylesheet">
 
     <!-- Main css -->
-    <link rel="stylesheet" href="{% static 'register/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'register/css/style.css' %}?v=1">
      <script>
         RegExp.escape = function(s){
         return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -25,12 +26,18 @@
         <div class="container">
             <form method="POST" action="/voter/register_vid" class="appointment-form" id="appointment-form">
                 {% csrf_token %}
+                {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                            <div class="alert">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 <h2>Registration</h2>
                 <div class="form-group-1">
                     <h3 style="margin-bottom: 0px;">Enter Voter ID</h3>
                     <input name="vid" required maxlength="10" type="text" pattern="^[A-Z0-9]{10}$"
-                                onchange="this.setCustomValidity(this.validity.patternMismatch ? this.title : '');
-                                       if(this.checkValidity()) form.pwd2.pattern = RegExp.escape(this.value);"
+                                onchange="this.setCustomValidity(this.validity.patternMismatch ? this.title : '');"
                                        title="Only A-Z and 0-9 allowed minimum 10 characters">
                 </div>
                 <div class="form-submit">

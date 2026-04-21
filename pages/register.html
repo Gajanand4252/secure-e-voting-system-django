@@ -88,12 +88,68 @@
                                 onchange="this.setCustomValidity(this.validity.patternMismatch ? this.title : '');">
                 </div>
                 <div class="form-group-1">
-                    <h3 style="margin-bottom: 0px;">Upload Video File</h3>
-                    <input style="color:white;" type="file" name="vidfile" accept="video/*" capture="user" required>
+                    <h3 style="margin-bottom: 0px;">Capture Live Face Image</h3>
+                    <p style="font-size: 12px; margin-bottom: 10px; color: #999;">Please ensure good lighting and position your face clearly in front of the camera</p>
+                    <video id="videoPreview" style="width: 100%; max-width: 400px; margin-bottom: 10px; border: 2px solid #ccc; border-radius: 5px;" autoplay="true"></video>
+                    <br>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <input type="hidden" name="facefile" id="faceImageInput">
+                    <button type="button" id="captureButton" class="submit" style="margin-bottom: 10px;">Capture Face</button>
+                    <p id="captureStatus" style="font-size: 12px; color: #666; margin-top: 5px;">Status: Ready to capture</p>
                 </div>
                 <div class="form-submit">
-                    <input type="submit" name="register"class="submit" value="Register">
+                    <input type="submit" name="register" class="submit" value="Register">
                 </div>
+                <script>
+                    let stream = null;
+                    const video = document.getElementById('videoPreview');
+                    const canvas = document.getElementById('canvas');
+                    const captureButton = document.getElementById('captureButton');
+                    const faceImageInput = document.getElementById('faceImageInput');
+                    const captureStatus = document.getElementById('captureStatus');
+                    
+                    async function startCamera() {
+                        try {
+                            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                            video.srcObject = stream;
+                            captureStatus.textContent = 'Status: Camera ready - Click "Capture Face" button';
+                        } catch (error) {
+                            captureStatus.textContent = 'Error: Unable to access camera. Please check permissions.';
+                            captureStatus.style.color = 'red';
+                        }
+                    }
+                    
+                    captureButton.addEventListener('click', function() {
+                        if (!stream) {
+                            captureStatus.textContent = 'Error: Camera not initialized';
+                            captureStatus.style.color = 'red';
+                            return;
+                        }
+                        
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0);
+                        
+                        canvas.toBlob(function(blob) {
+                            const reader = new FileReader();
+                            reader.onloadend = function() {
+                                faceImageInput.value = reader.result;
+                                captureStatus.textContent = 'Status: Face captured successfully! Ready to register.';
+                                captureStatus.style.color = 'green';
+                            };
+                            reader.readAsDataURL(blob);
+                        }, 'image/jpeg', 0.95);
+                    });
+                    
+                    window.addEventListener('beforeunload', function() {
+                        if (stream) {
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                    });
+                    
+                    startCamera();
+                </script>
             </form>
         </div>
 
