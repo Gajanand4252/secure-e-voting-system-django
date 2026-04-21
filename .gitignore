@@ -211,3 +211,8 @@ TrainingImage/
 TrainingImageLabel/
 DatasetVideo/
 media/
+venv312/
+.idea/
+.vscode/
+desktop.ini
+VotingDSVideo/
